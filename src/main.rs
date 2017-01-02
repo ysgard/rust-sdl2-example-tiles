@@ -1,8 +1,28 @@
 extern crate sdl2;
 
+use std::path::Path;
+
 use sdl2::pixels::Color;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
+
+use sdl2::image::{INIT_PNG, LoadTexture};
+
+// Screen dimensions
+const WIDTH:  u32 = 800;
+const HEIGHT: u32 = 600;
+
+// Information about the spritesheet.  We're using the tiles
+// from the game 'Brogue' which are simple but nicely rendered
+// ASCII characters, organized from the UTF-8 table
+// into a 16 x 16 grid
+// 'Z' = position 90
+// 0-31 not used, 128-160 blank, 128-139 custom glyphs
+const SPRITE_H: u32 = 28;
+const SPRITE_W: u32 = 18;
+const SPRITE_SHEET: &'static str = "resources/BrogueFont5.png"
+
+
 
 pub fn main() {
     let sdl_context = sdl2::init().unwrap();
@@ -14,9 +34,11 @@ pub fn main() {
         .build()
         .unwrap();
 
+    let _image = sdl2::image::init(INIT_PNG)
+
     let mut renderer = window.renderer().build().unwrap();
 
-    renderer.set_draw_color(Color::RGB(255, 0, 0));
+    renderer.set_draw_color(Color::RGB(0, 0, 0));
     renderer.clear();
     renderer.present();
     let mut event_pump = sdl_context.event_pump().unwrap();
