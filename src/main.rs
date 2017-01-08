@@ -1,6 +1,9 @@
 extern crate sdl2;
+extern crate time;
+extern crate rand;
 
 use std::path::Path;
+use std::time::duration::Duration;
 
 use sdl2::pixels::{Color, PixelFormatEnum};
 use sdl2::event::Event;
@@ -71,11 +74,13 @@ pub fn main() {
     renderer.set_draw_color(Color::RGB(0, 255, 0));
     renderer.clear();
     // Copy the sprite(s) onto the window
-     renderer.copy(&spritesheet, None, None).expect("Render failed");
+    renderer.copy(&spritesheet, None, None).expect("Render failed");
 
     renderer.present();
     let mut event_pump = sdl_context.event_pump().unwrap();
 
+    // Get the time
+    let now = time::get_time();
     'running: loop {
         for event in event_pump.poll_iter() {
             match event {
@@ -84,6 +89,14 @@ pub fn main() {
                 },
                 _ => {}
             }
+        }
+        // Every two seconds fill the entire screen with random sprites
+        // of every color!
+        if (time::get_time() > now + Duration::seconds(2)) {
+            now = time::get_time();
+
+
+
         }
     }
 }
