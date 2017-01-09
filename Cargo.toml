@@ -6,3 +6,7 @@ authors = ["Ysgard <ysgard@gmail.com>"]
 [dependencies.sdl2]
 version = "*"
 features = ["image"]
+
+[dependencies]
+rand = "*"
+time = "*"

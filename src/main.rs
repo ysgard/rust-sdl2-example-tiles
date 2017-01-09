@@ -3,7 +3,8 @@ extern crate time;
 extern crate rand;
 
 use std::path::Path;
-use std::time::duration::Duration;
+use std::time::{Duration, Instant};
+use rand::{thread_rng, Rng};
 
 use sdl2::pixels::{Color, PixelFormatEnum};
 use sdl2::event::Event;
@@ -42,6 +43,9 @@ pub fn main() {
 
     let _image = sdl2::image::init(INIT_PNG);
 
+    // Initialize an RNG
+    let mut rng = thread_rng();
+
     let mut renderer = window.renderer().build().unwrap();
 
     // Load the spritesheet as a surface so we can set the color key
@@ -64,23 +68,19 @@ pub fn main() {
     assert!(tex_query.height == SPRITE_H * SPRITE_ROWS);
 
     // Double buffer it up
-    let buffer_tex: Texture = renderer.create_texture(
+    let mut buffer_tex: Texture = renderer.create_texture(
         PixelFormatEnum::RGBA8888,
         TextureAccess::Target,
         WIDTH,
         HEIGHT
     ).unwrap();
 
-    renderer.set_draw_color(Color::RGB(0, 255, 0));
-    renderer.clear();
-    // Copy the sprite(s) onto the window
-    renderer.copy(&spritesheet, None, None).expect("Render failed");
-
-    renderer.present();
     let mut event_pump = sdl_context.event_pump().unwrap();
 
     // Get the time
-    let now = time::get_time();
+    let mut now = Instant::now();
+    let mut blit_now = true;
+
     'running: loop {
         for event in event_pump.poll_iter() {
             match event {
@@ -91,12 +91,59 @@ pub fn main() {
             }
         }
         // Every two seconds fill the entire screen with random sprites
-        // of every color!
-        if (time::get_time() > now + Duration::seconds(2)) {
-            now = time::get_time();
+        // of every color!  
+        
+        if blit_now == true {
 
+            // Set the SDL render target to be our double buffer
+            renderer.render_target().unwrap().set(buffer_tex);
+            renderer.clear();
 
+            // For each sprite 'block' in the width and height of the screen...
+            for i in 0..(WIDTH / SPRITE_W) + 1 {
+                for j in 0..(HEIGHT / SPRITE_H) + 1 {
+                    // Pick a random letter
+                    let glyph_x = rng.gen_range(0, 16);
+                    let glyph_y = rng.gen_range(3, 16);
 
+                    // Get a random color for each hue
+                    let r = rng.gen_range(0, 255);
+                    let g = rng.gen_range(0, 255);
+                    let b = rng.gen_range(0, 255);
+                    let rand_rgb = Color::RGB(r, g, b);
+                    
+
+                    // Blit the random glyph from the spritesheet to the double buffer
+                    let dest_rect = Rect::new(
+                        (i * SPRITE_W) as i32, 
+                        (j * SPRITE_H) as i32, 
+                        SPRITE_W, 
+                        SPRITE_H);
+                    let src_rect = Rect::new(
+                        (glyph_x * SPRITE_W) as i32, 
+                        (glyph_y * SPRITE_H) as i32,
+                        SPRITE_W,
+                        SPRITE_H);
+                    renderer.set_draw_color(rand_rgb);
+                    //renderer.set_draw_color(Color::RGB(128, 128, 128));
+                    renderer.fill_rect(dest_rect).unwrap();
+                    //spritesheet.set_color_mod(255, 0, 0);
+                    spritesheet.set_blend_mode(BlendMode::Mod);
+                    renderer.copy(&spritesheet, Option::Some(src_rect), Option::Some(dest_rect)).unwrap();
+
+                }
+            }
+
+            // Flip the double buffer to the screen
+            buffer_tex = renderer.render_target().unwrap().reset().unwrap().unwrap();
+            renderer.copy(&buffer_tex, None, None).expect("Render failed");
+            renderer.present();
+            // done blitting
+            blit_now = false;
         }
+        if now.elapsed() > Duration::from_secs(2) {
+            blit_now = true;
+            now = Instant::now();
+        } 
     }
 }
