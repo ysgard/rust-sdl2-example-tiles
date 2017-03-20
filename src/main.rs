@@ -31,6 +31,35 @@ const SPRITE_COLS: u32 = 16;
 const SPRITE_ROWS: u32 = 16;
 const SPRITE_SHEET: &'static str = "resources/BrogueFont5.png";
 
+fn prep_sprite<'a>(spritesheet: &Surface, src_rect: Rect, fg: Color)
+                   -> Surface<'a> {
+    let mut tmp: Surface = Surface::new(src_rect.width(),
+                                        src_rect.height(),
+                                        PixelFormatEnum::ARGB8888)
+        .unwrap();
+    tmp.fill_rect(None, Color::RGBA(0, 0, 0, 0));
+    spritesheet.blit(Some(src_rect), &mut tmp, None).unwrap();
+    let mut result: Surface = swap_color(&mut tmp, Color::RGBA(0, 0, 0, 0), fg);
+    result.set_color_key(true, Color::RGBA(0, 0, 0, 0));
+    result
+}
+    
+
+fn swap_color<'a>(surface: &mut Surface, old_color: Color, new_color: Color)
+              -> Surface<'a> {
+    surface.set_color_key(true, old_color);
+    let mut result: Surface = Surface::new(surface.width(),
+                                           surface.height(),
+                                           PixelFormatEnum::ABGR8888)
+        .unwrap();
+    result.fill_rect(None, new_color);
+    surface.blit(None, &mut result, None).unwrap();
+    result
+}
+    
+    
+
+    
 pub fn main() {
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
@@ -125,10 +154,10 @@ pub fn main() {
                         SPRITE_W,
                         SPRITE_H);
                     renderer.set_draw_color(rand_rgb);
-                    //renderer.set_draw_color(Color::RGB(128, 128, 128));
                     renderer.fill_rect(dest_rect).unwrap();
-                    //spritesheet.set_color_mod(255, 0, 0);
-                    spritesheet.set_blend_mode(BlendMode::Mod);
+                    renderer.set_draw_color(Color::RGB(0, 0, 0));
+                    spritesheet.set_color_mod(r, g, b);
+                    spritesheet.set_blend_mode(BlendMode::Add);
                     renderer.copy(&spritesheet, Option::Some(src_rect), Option::Some(dest_rect)).unwrap();
 
                 }
