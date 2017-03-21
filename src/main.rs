@@ -31,6 +31,43 @@ const SPRITE_COLS: u32 = 16;
 const SPRITE_ROWS: u32 = 16;
 const SPRITE_SHEET: &'static str = "resources/BrogueFont5.png";
 
+
+// General procedure
+// 1. Create a black surface the size of the glyph
+// 2. Tint the glyph what foreground color we would like
+// 3. Blit the glyph onto the black surface with blendmode:add
+// 4. Set black to be alpha
+// 5. Create a surface with the bg color we want
+// 6. Blit the colored glyph onto the background tile with blendmode:none
+
+
+fn create_sprite<'a>(spritesheet: &Surface,
+                     sprite_rect: Rect,
+                     fg: Color,
+                     bg: Color)
+                     -> Surface<'a> {
+    let BLACK = Color::RGBA(0, 0, 0, 0);
+    let ALPHA = Color::RGBA(0, 0, 0, 0);
+    let mut tile: Surface = create_tile(sprite_rect, bg);
+    let mut glyph: Surface = create_tile(sprite_rect, ALPHA);
+    glyph.set_blend_mode(BlendMode::Add);
+    spritesheet.blit(Some(sprite_rect), &mut glyph, None).unwrap();
+    glyph.set_color_key(true, BLACK);
+    glyph.set_color_mod(fg);
+    glyph.blit(None, &mut tile, None);
+    tile
+}
+
+fn create_tile<'a>(size_rect: Rect, color: Color)
+                           -> Surface<'a> {
+    let mut tile: Surface = Surface::new(size_rect.width(),
+                                         size_rect.height(),
+                                         PixelFormatEnum::ARGB8888
+    ).unwrap();
+    tile.fill_rect(None, color);
+    tile
+}
+
 fn prep_sprite<'a>(spritesheet: &Surface, src_rect: Rect, fg: Color)
                    -> Surface<'a> {
     let mut tmp: Surface = Surface::new(src_rect.width(),
@@ -61,6 +98,10 @@ fn swap_color<'a>(surface: &mut Surface, old_color: Color, new_color: Color)
 
     
 pub fn main() {
+
+    let RED = Color::RGB(255, 0, 0);
+    let BLUE = Color::RGB(0, 0, 255);
+
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
 
@@ -83,9 +124,9 @@ pub fn main() {
     // of the sprite when we blit it
     spritesurf.set_color_key(true, Color::RGB(0, 0, 0)).unwrap();
     // convert the surface to a texture
-    let mut spritesheet: Texture = renderer.create_texture_from_surface(spritesurf).unwrap();
+    let mut spritesheet: Texture = renderer.create_texture_from_surface(&spritesurf).unwrap();
     // Set the blend mode on the texture for antialiasing
-    spritesheet.set_blend_mode(BlendMode::Add);
+     spritesheet.set_blend_mode(BlendMode::Add);
 
 
     // Create a 'punch' rect for getting individual sprites from the spritesheet
@@ -136,10 +177,16 @@ pub fn main() {
                     let glyph_y = rng.gen_range(3, 16);
 
                     // Get a random color for each hue
-                    let r = rng.gen_range(0, 255);
-                    let g = rng.gen_range(0, 255);
-                    let b = rng.gen_range(0, 255);
-                    let rand_rgb = Color::RGB(r, g, b);
+                    let r1 = rng.gen_range(0, 255);
+                    let g1 = rng.gen_range(0, 255);
+                    let b1 = rng.gen_range(0, 255);
+                    let rand_rgb_1 = Color::RGB(r1, g1, b1);
+
+                    // Get a random background for each hue
+                    let r2 = rng.gen_range(0, 255);
+                    let g2 = rng.gen_range(0, 255);
+                    let b2 = rng.gen_range(0, 255);
+                    let rand_rgb_2 = Color::RGB(r2, g2, b2);
                     
 
                     // Blit the random glyph from the spritesheet to the double buffer
@@ -153,12 +200,19 @@ pub fn main() {
                         (glyph_y * SPRITE_H) as i32,
                         SPRITE_W,
                         SPRITE_H);
-                    renderer.set_draw_color(rand_rgb);
-                    renderer.fill_rect(dest_rect).unwrap();
-                    renderer.set_draw_color(Color::RGB(0, 0, 0));
-                    spritesheet.set_color_mod(r, g, b);
-                    spritesheet.set_blend_mode(BlendMode::Add);
-                    renderer.copy(&spritesheet, Option::Some(src_rect), Option::Some(dest_rect)).unwrap();
+                    // renderer.set_draw_color(rand_rgb);
+                    // renderer.fill_rect(dest_rect).unwrap();
+                    // renderer.set_draw_color(Color::RGB(0, 0, 0));
+                    // spritesheet.set_color_mod(r, g, b);
+                    // spritesheet.set_blend_mode(BlendMode::Add);
+                    // renderer.copy(&spritesheet, Option::Some(src_rect), Option::Some(dest_rect)).unwrap();
+                    let glyph: Surface = create_sprite(&spritesurf,
+                                                       src_rect,
+                                                       RED,
+                                                       BLUE);
+                    let glyph_tex: Texture = renderer.create_texture_from_surface(&glyph).unwrap();
+                    renderer.copy(&glyph_tex, None, Some(dest_rect)).unwrap();
+                    
 
                 }
             }
