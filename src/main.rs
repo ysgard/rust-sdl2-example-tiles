@@ -48,13 +48,17 @@ fn create_sprite<'a>(spritesheet: &Surface,
                      -> Surface<'a> {
     let BLACK = Color::RGBA(0, 0, 0, 0);
     let ALPHA = Color::RGBA(0, 0, 0, 0);
+    let WHITE = Color::RGBA(255, 255, 255, 0);
     let mut tile: Surface = create_tile(sprite_rect, bg);
-    let mut glyph: Surface = create_tile(sprite_rect, ALPHA);
-    glyph.set_blend_mode(BlendMode::Add);
+    let mut tmp: Surface = create_tile(sprite_rect, WHITE);
+    let mut glyph: Surface = create_tile(sprite_rect, BLACK);
     spritesheet.blit(Some(sprite_rect), &mut glyph, None).unwrap();
-    glyph.set_color_key(true, BLACK);
     glyph.set_color_mod(fg);
-    glyph.blit(None, &mut tile, None);
+    tmp.set_blend_mode(BlendMode::Add);
+    glyph.blit(None, &mut tmp, None).unwrap();
+    tmp.set_color_key(true, WHITE);
+    tmp.set_blend_mode(BlendMode::None);
+    tmp.blit(None, &mut tile, None).unwrap();
     tile
 }
 
@@ -67,40 +71,12 @@ fn create_tile<'a>(size_rect: Rect, color: Color)
     tile.fill_rect(None, color);
     tile
 }
-
-fn prep_sprite<'a>(spritesheet: &Surface, src_rect: Rect, fg: Color)
-                   -> Surface<'a> {
-    let mut tmp: Surface = Surface::new(src_rect.width(),
-                                        src_rect.height(),
-                                        PixelFormatEnum::ARGB8888)
-        .unwrap();
-    tmp.fill_rect(None, Color::RGBA(0, 0, 0, 0));
-    spritesheet.blit(Some(src_rect), &mut tmp, None).unwrap();
-    let mut result: Surface = swap_color(&mut tmp, Color::RGBA(0, 0, 0, 0), fg);
-    result.set_color_key(true, Color::RGBA(0, 0, 0, 0));
-    result
-}
     
-
-fn swap_color<'a>(surface: &mut Surface, old_color: Color, new_color: Color)
-              -> Surface<'a> {
-    surface.set_color_key(true, old_color);
-    let mut result: Surface = Surface::new(surface.width(),
-                                           surface.height(),
-                                           PixelFormatEnum::ABGR8888)
-        .unwrap();
-    result.fill_rect(None, new_color);
-    surface.blit(None, &mut result, None).unwrap();
-    result
-}
-    
-    
-
     
 pub fn main() {
 
     let RED = Color::RGB(255, 0, 0);
-    let BLUE = Color::RGB(0, 0, 255);
+    let BLUE = Color::RGB(128 ,128, 128);
 
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
@@ -200,16 +176,11 @@ pub fn main() {
                         (glyph_y * SPRITE_H) as i32,
                         SPRITE_W,
                         SPRITE_H);
-                    // renderer.set_draw_color(rand_rgb);
-                    // renderer.fill_rect(dest_rect).unwrap();
-                    // renderer.set_draw_color(Color::RGB(0, 0, 0));
-                    // spritesheet.set_color_mod(r, g, b);
-                    // spritesheet.set_blend_mode(BlendMode::Add);
-                    // renderer.copy(&spritesheet, Option::Some(src_rect), Option::Some(dest_rect)).unwrap();
+      
                     let glyph: Surface = create_sprite(&spritesurf,
                                                        src_rect,
-                                                       RED,
-                                                       BLUE);
+                                                       rand_rgb_1,
+                                                       rand_rgb_2);
                     let glyph_tex: Texture = renderer.create_texture_from_surface(&glyph).unwrap();
                     renderer.copy(&glyph_tex, None, Some(dest_rect)).unwrap();
                     
