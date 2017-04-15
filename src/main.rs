@@ -72,6 +72,27 @@ fn raw_sprite<'a>(spritesheet: &Surface,
     tile
 }
 
+fn colorize_sprite(sprite: &mut Surface, fg_color: Color, bg_color: Color) {
+    ()
+}
+
+
+/// Modify a pixel array in place to change its background color
+///
+/// # Arguments
+///
+/// * pixels: an array of mutable pixel values, taken from a Surface
+/// * fg: A foreground color
+/// * bg: The background color
+fn mod_pixels(pixels: &mut [u8], fg: Color, bg: Color) {
+   
+    // Iterate over the pixel array.  We assume RGB888 here
+}
+    
+    
+
+
+
 /// Return a sprite with a colored foreground and background
 ///
 /// # Arguments
@@ -97,11 +118,12 @@ fn color_sprite<'a>(sprite: &Surface,
     let mut tile: Surface = create_tile(Rect::new(0, 0, sprite.width(), sprite.height()), bg);
     let mut glyph: Surface = create_tile(Rect::new(0, 0, sprite.width(), sprite.height()),
                                          Color::RGB(0, 0, 0));
-    glyph.set_blend_mode(BlendMode::Blend);
+    glyph.set_blend_mode(BlendMode::None);
     sprite.blit(None, &mut glyph, None).unwrap();
     if fg_color.is_some() {
         glyph.set_color_mod(fg_color.unwrap());
     }
+    glyph.set_color_key(true, Color::RGB(0, 0, 0));
     glyph.blit(None, &mut tile, None).unwrap();
     tile
 }
